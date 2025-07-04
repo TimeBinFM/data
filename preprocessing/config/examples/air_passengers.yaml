@@ -1,0 +1,23 @@
+# Dataset configuration
+dataset:
+  name: air-passengers
+  repo_id: duol/airpassengers
+  files: 
+    - AP.csv
+  cache_dir: data/cache
+
+# Preprocessing configuration
+preprocessing:
+  transforms:
+    - name: MeanScaler
+      params:
+        epsilon: 1.0e-8
+
+# Disable augmentation
+augmentation:
+  enabled: false
+
+# DataLoader configuration
+dataloader:
+  batch_size: 32
+  shuffle: true 
