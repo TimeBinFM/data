@@ -5,10 +5,11 @@ A comprehensive preprocessing pipeline for foundation time series models, provid
 ## Features
 
 - Download datasets from Hugging Face Hub
-- Flexible transform chain with built-in transforms:
-  - MinMaxScaler: scales each sample to a specific range independently
-  - StandardScaler: standardizes each sample to zero mean and unit variance independently
-  - MeanScaler: scales each sample by its mean absolute value independently
+- Static, batch-level transforms with parameter tracking:
+  - MinMaxScaler: scales data to a specific range
+  - StandardScaler: standardizes data to zero mean and unit variance
+  - MeanScaler: scales data by mean absolute value
+- Support for inverse transforms to recover original scale
 - Time series augmentation techniques (e.g., linear combination)
 - PyTorch DataLoader integration
 - Configurable pipeline using dataclasses
@@ -47,8 +48,7 @@ config = Config(
             TransformConfig(
                 name="MeanScaler",
                 params={
-                    "center": True,
-                    "epsilon": 1e-8
+                    "center": True  # epsilon handled automatically based on dtype
                 }
             )
         ]
@@ -64,26 +64,50 @@ pipeline = TimeSeriesPipeline(config)
 
 # Create dataloader with transforms
 dataloader = pipeline.create_dataloader(dataset)
+
+# Get transformed data and parameters
+batch, transform_params = next(iter(dataloader))
+
+# Inverse transform to recover original scale
+original_scale = pipeline.inverse_transforms(batch, transform_params)
 ```
 
 ### Transform Details
 
-All transforms operate on individual samples independently, making them suitable for both batch and online processing:
+All transforms are static and operate at batch level with shape (batch_size, sequence_length, n_channels):
 
-- **MinMaxScaler**: Scales each sample to a specified range (default [0, 1])
+- **MinMaxScaler**: Scales data to a specified range (default [0, 1])
   ```python
-  transform = MinMaxScaler(feature_range=(0, 1), epsilon=1e-8)
+  # Transform returns both scaled data and parameters
+  scaled_data, params = MinMaxScaler.transform(x, feature_range=(0, 1))
+  
+  # Inverse transform recovers original scale
+  original_data = MinMaxScaler.inverse_transform(scaled_data, params)
   ```
 
-- **StandardScaler**: Standardizes each sample independently
+- **StandardScaler**: Standardizes data
   ```python
-  transform = StandardScaler(epsilon=1e-8)
+  # Transform and store parameters
+  scaled_data, params = StandardScaler.transform(x)
+  
+  # Inverse transform
+  original_data = StandardScaler.inverse_transform(scaled_data, params)
   ```
 
 - **MeanScaler**: Scales by mean absolute value
   ```python
-  transform = MeanScaler(epsilon=1e-8, center=True)
+  # Transform with optional centering
+  scaled_data, params = MeanScaler.transform(x, center=True)
+  
+  # Inverse transform
+  original_data = MeanScaler.inverse_transform(scaled_data, params)
   ```
+
+Key features of transforms:
+- Static methods with no instance state
+- Automatic epsilon handling based on dtype
+- Parameter tracking for inverse transforms
+- Batch-level processing for efficiency
 
 ### Predefined Datasets
 
