@@ -2,10 +2,9 @@
 
 from abc import ABC, abstractmethod
 import torch
-import torch.nn as nn
 
 
-class BaseTransform(ABC, nn.Module):
+class BaseTransform(ABC):
     """Abstract base class for all per-sample transformations.
     
     All transforms must:
@@ -15,10 +14,11 @@ class BaseTransform(ABC, nn.Module):
     """
     
     def __init__(self):
-        super().__init__()
+        """Initialize the transform."""
+        pass
     
     @abstractmethod
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def transform(self, x: torch.Tensor) -> torch.Tensor:
         """Apply the transform to each sample independently.
         
         Args:
@@ -28,6 +28,19 @@ class BaseTransform(ABC, nn.Module):
             Transformed tensor of same shape
         """
         pass
+    
+    def __call__(self, x: torch.Tensor) -> torch.Tensor:
+        """Make the transform callable.
+        
+        This allows using transform(x) instead of transform.transform(x)
+        
+        Args:
+            x: Input tensor
+            
+        Returns:
+            Transformed tensor
+        """
+        return self.transform(x)
     
     def inverse_transform(self, x: torch.Tensor) -> torch.Tensor:
         """Inverse transform to recover original scale/form.
@@ -43,11 +56,3 @@ class BaseTransform(ABC, nn.Module):
         """
         raise NotImplementedError("This transform does not support inverse transformation")
     
-    @property
-    def is_invertible(self) -> bool:
-        """Whether the transform supports inverse transformation."""
-        try:
-            self.inverse_transform(torch.ones(1, 1, 1))
-            return True
-        except NotImplementedError:
-            return False 
