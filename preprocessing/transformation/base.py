@@ -1,58 +1,45 @@
-"""Base interface for all per-sample transformations."""
+"""Base interface for all transformations."""
 
 from abc import ABC, abstractmethod
+from typing import Dict, Any, Tuple
 import torch
 
 
 class BaseTransform(ABC):
-    """Abstract base class for all per-sample transformations.
+    """Abstract base class for all transformations.
     
     All transforms must:
-    1. Operate on individual samples independently
-    2. Support inverse transformation when applicable
-    3. Handle batched inputs of shape (batch_size, sequence_length, n_channels)
+    1. Handle batched inputs of shape (batch_size, sequence_length, n_channels)
+    2. Return both transformed data and parameters needed for inverse transform
+    3. Support inverse transformation using stored parameters
     """
     
-    def __init__(self):
-        """Initialize the transform."""
-        pass
-    
+    @staticmethod
     @abstractmethod
-    def transform(self, x: torch.Tensor) -> torch.Tensor:
-        """Apply the transform to each sample independently.
+    def transform(x: torch.Tensor) -> Tuple[torch.Tensor, Dict[str, Any]]:
+        """Apply the transform to input data.
         
         Args:
             x: Input tensor of shape (batch_size, sequence_length, n_channels)
             
         Returns:
-            Transformed tensor of same shape
+            tuple:
+                - Transformed tensor of same shape
+                - Dictionary of parameters needed for inverse transform
         """
         pass
     
-    def __call__(self, x: torch.Tensor) -> torch.Tensor:
-        """Make the transform callable.
-        
-        This allows using transform(x) instead of transform.transform(x)
-        
-        Args:
-            x: Input tensor
-            
-        Returns:
-            Transformed tensor
-        """
-        return self.transform(x)
-    
-    def inverse_transform(self, x: torch.Tensor) -> torch.Tensor:
+    @staticmethod
+    @abstractmethod
+    def inverse_transform(x: torch.Tensor, stats: Dict[str, Any]) -> torch.Tensor:
         """Inverse transform to recover original scale/form.
         
         Args:
             x: Transformed tensor of shape (batch_size, sequence_length, n_channels)
+            stats: Dictionary of parameters from the forward transform
             
         Returns:
             Inverse transformed tensor of same shape
-            
-        Raises:
-            NotImplementedError: If transform is not invertible
         """
-        raise NotImplementedError("This transform does not support inverse transformation")
+        pass
     

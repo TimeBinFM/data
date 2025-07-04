@@ -21,15 +21,14 @@ TRANSFORM_REGISTRY: Dict[str, Type[BaseTransform]] = {
 }
 
 
-def get_transform(name: str, **kwargs) -> BaseTransform:
-    """Get a transform instance by name.
+def get_transform(name: str) -> Type[BaseTransform]:
+    """Get a transform class by name.
     
     Args:
         name: Name of the transform class
-        **kwargs: Arguments to pass to the transform constructor
         
     Returns:
-        Instantiated transform
+        Transform class
         
     Raises:
         KeyError: If transform name is not found in registry
@@ -40,5 +39,4 @@ def get_transform(name: str, **kwargs) -> BaseTransform:
             f"Available transforms: {list(TRANSFORM_REGISTRY.keys())}"
         )
     
-    transform_cls = TRANSFORM_REGISTRY[name]
-    return transform_cls(**kwargs)
+    return TRANSFORM_REGISTRY[name]

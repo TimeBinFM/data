@@ -1,187 +1,175 @@
 """Normalization transforms for time series data."""
 
-from typing import Optional, Tuple, Union
+from typing import Dict, Any, Tuple
 import torch
 
 from .base import BaseTransform
 
 
 class MinMaxScaler(BaseTransform):
-    """Min-max normalization transform applied per sample."""
+    """Min-max normalization transform."""
     
-    def __init__(
-        self,
-        feature_range: Tuple[float, float] = (0, 1),
-        epsilon: float = 1e-8
-    ):
-        """Initialize the scaler.
+    @staticmethod
+    def transform(x: torch.Tensor, feature_range: Tuple[float, float] = (0, 1)) -> Tuple[torch.Tensor, Dict[str, Any]]:
+        """Scale data to target range.
         
         Args:
+            x: Input data of shape (batch_size, sequence_length, n_channels)
             feature_range: Target range for scaled data
-            epsilon: Small constant to avoid division by zero
-        """
-        super().__init__()
-        self.feature_range = feature_range
-        self.epsilon = epsilon
-        self._min_vals = None
-        self._range_vals = None
-        
-    def transform(self, x: torch.Tensor) -> torch.Tensor:
-        """Scale each sample independently.
-        
-        Args:
-            x: Input data of shape (sequence_length, n_channels) or 
-               (batch_size, sequence_length, n_channels)
             
         Returns:
-            Scaled data with same shape
+            tuple:
+                - Scaled data with same shape
+                - Dictionary with parameters for inverse transform
         """
+        # Get dtype-specific epsilon
+        eps = torch.finfo(x.dtype).eps
+        
         # Compute min and max per sample
-        self._min_vals = x.amin(dim=-2, keepdim=True)  # Shape: (..., 1, n_channels)
-        max_vals = x.amax(dim=-2, keepdim=True)  # Shape: (..., 1, n_channels)
+        min_vals = x.amin(dim=-2, keepdim=True)  # Shape: (batch_size, 1, n_channels)
+        max_vals = x.amax(dim=-2, keepdim=True)  # Shape: (batch_size, 1, n_channels)
         
         # Handle constant sequences
-        self._range_vals = max_vals - self._min_vals
-        self._range_vals = torch.where(self._range_vals == 0, self.epsilon, self._range_vals)
+        range_vals = max_vals - min_vals
+        range_vals = torch.where(range_vals == 0, eps, range_vals)
         
         # Scale to [0, 1]
-        x_std = (x - self._min_vals) / self._range_vals
+        x_std = (x - min_vals) / range_vals
         
         # Scale to feature range
-        x_scaled = x_std * (self.feature_range[1] - self.feature_range[0]) + self.feature_range[0]
+        x_scaled = x_std * (feature_range[1] - feature_range[0]) + feature_range[0]
         
-        return x_scaled
+        # Store parameters for inverse transform
+        stats = {
+            'min_vals': min_vals,
+            'range_vals': range_vals,
+            'feature_range': feature_range
+        }
+        
+        return x_scaled, stats
     
-    def inverse_transform(self, x: torch.Tensor) -> torch.Tensor:
+    @staticmethod
+    def inverse_transform(x: torch.Tensor, stats: Dict[str, Any]) -> torch.Tensor:
         """Inverse transform to recover original scale.
         
         Args:
-            x: Scaled data of shape (sequence_length, n_channels) or 
-               (batch_size, sequence_length, n_channels)
+            x: Scaled data of shape (batch_size, sequence_length, n_channels)
+            stats: Dictionary with parameters from forward transform
             
         Returns:
             Data in original scale
         """
-        if self._min_vals is None or self._range_vals is None:
-            raise RuntimeError("Scaler must be applied to data before inverse transform")
-            
+        min_vals = stats['min_vals']
+        range_vals = stats['range_vals']
+        feature_range = stats['feature_range']
+        
         # Scale back to [0, 1]
-        x_std = (x - self.feature_range[0]) / (self.feature_range[1] - self.feature_range[0])
+        x_std = (x - feature_range[0]) / (feature_range[1] - feature_range[0])
         
         # Scale back to original range
-        x_original = x_std * self._range_vals + self._min_vals
+        x_original = x_std * range_vals + min_vals
         
         return x_original
 
 
 class StandardScaler(BaseTransform):
-    """Standardization transform (zero mean, unit variance) applied per sample."""
+    """Standardization transform (zero mean, unit variance)."""
     
-    def __init__(self, epsilon: float = 1e-8):
-        """Initialize the scaler.
-        
-        Args:
-            epsilon: Small constant to avoid division by zero
-        """
-        super().__init__()
-        self.epsilon = epsilon
-        self._mean = None
-        self._std = None
-        
-    def transform(self, x: torch.Tensor) -> torch.Tensor:
+    @staticmethod
+    def transform(x: torch.Tensor) -> Tuple[torch.Tensor, Dict[str, Any]]:
         """Standardize each sample independently.
         
         Args:
-            x: Input data of shape (sequence_length, n_channels) or 
-               (batch_size, sequence_length, n_channels)
+            x: Input data of shape (batch_size, sequence_length, n_channels)
             
         Returns:
-            Standardized data with same shape
+            tuple:
+                - Standardized data with same shape
+                - Dictionary with parameters for inverse transform
         """
+        # Get dtype-specific epsilon
+        eps = torch.finfo(x.dtype).eps
+        
         # Compute mean and std per sample
-        self._mean = x.mean(dim=-2, keepdim=True)  # Shape: (..., 1, n_channels)
-        self._std = x.std(dim=-2, keepdim=True)  # Shape: (..., 1, n_channels)
+        mean = x.mean(dim=-2, keepdim=True)  # Shape: (batch_size, 1, n_channels)
+        std = x.std(dim=-2, keepdim=True)  # Shape: (batch_size, 1, n_channels)
         
         # Handle constant sequences
-        self._std = torch.where(self._std == 0, self.epsilon, self._std)
+        std = torch.where(std == 0, eps, std)
         
-        return (x - self._mean) / self._std
+        # Store parameters for inverse transform
+        stats = {
+            'mean': mean,
+            'std': std
+        }
+        
+        return (x - mean) / std, stats
     
-    def inverse_transform(self, x: torch.Tensor) -> torch.Tensor:
+    @staticmethod
+    def inverse_transform(x: torch.Tensor, stats: Dict[str, Any]) -> torch.Tensor:
         """Inverse transform to recover original scale.
         
         Args:
-            x: Standardized data of shape (sequence_length, n_channels) or 
-               (batch_size, sequence_length, n_channels)
+            x: Standardized data of shape (batch_size, sequence_length, n_channels)
+            stats: Dictionary with parameters from forward transform
             
         Returns:
             Data in original scale
         """
-        if self._mean is None or self._std is None:
-            raise RuntimeError("Scaler must be applied to data before inverse transform")
-            
-        return x * self._std + self._mean
+        return x * stats['std'] + stats['mean']
 
 
 class MeanScaler(BaseTransform):
-    """Scaling by mean of absolute values, applied per sample."""
+    """Scaling by mean of absolute values."""
     
-    def __init__(
-        self,
-        epsilon: float = 1e-8,
-        center: bool = False  #TODO: or True?
-    ):
-        """Initialize the scaler.
-        
-        Args:
-            epsilon: Small constant to avoid division by zero
-            center: If True, subtract mean before scaling
-        """
-        super().__init__()
-        self.epsilon = epsilon
-        self.center = center
-        self._mean = None
-        self._scale_factor = None
-        
-    def transform(self, x: torch.Tensor) -> torch.Tensor:
+    @staticmethod
+    def transform(x: torch.Tensor, center: bool = False) -> Tuple[torch.Tensor, Dict[str, Any]]:
         """Scale each sample by its mean absolute value.
         
         Args:
-            x: Input data of shape (sequence_length, n_channels) or 
-               (batch_size, sequence_length, n_channels)
+            x: Input data of shape (batch_size, sequence_length, n_channels)
+            center: If True, subtract mean before scaling
             
         Returns:
-            Scaled data with same shape
+            tuple:
+                - Scaled data with same shape
+                - Dictionary with parameters for inverse transform
         """
+        # Get dtype-specific epsilon
+        eps = torch.finfo(x.dtype).eps
+        
+        stats = {}
+        
         # Compute mean for centering if needed
-        if self.center:
-            self._mean = x.mean(dim=-2, keepdim=True)  # Shape: (..., 1, n_channels)
-            x = x - self._mean
+        if center:
+            mean = x.mean(dim=-2, keepdim=True)  # Shape: (batch_size, 1, n_channels)
+            x = x - mean
+            stats['mean'] = mean
             
         # Compute mean of absolute values per sample
-        abs_mean = torch.abs(x).mean(dim=-2, keepdim=True)  # Shape: (..., 1, n_channels)
+        abs_mean = torch.abs(x).mean(dim=-2, keepdim=True)  # Shape: (batch_size, 1, n_channels)
         
         # Add epsilon to handle zero-valued sequences
-        self._scale_factor = abs_mean + self.epsilon
+        scale_factor = abs_mean + eps
+        stats['scale_factor'] = scale_factor
+        stats['center'] = center
         
-        return x / self._scale_factor
+        return x / scale_factor, stats
     
-    def inverse_transform(self, x: torch.Tensor) -> torch.Tensor:
+    @staticmethod
+    def inverse_transform(x: torch.Tensor, stats: Dict[str, Any]) -> torch.Tensor:
         """Inverse transform to recover original scale.
         
         Args:
-            x: Scaled data of shape (sequence_length, n_channels) or 
-               (batch_size, sequence_length, n_channels)
+            x: Scaled data of shape (batch_size, sequence_length, n_channels)
+            stats: Dictionary with parameters from forward transform
             
         Returns:
             Data in original scale
         """
-        if self._scale_factor is None:
-            raise RuntimeError("Scaler must be applied to data before inverse transform")
-            
-        x = x * self._scale_factor
+        x = x * stats['scale_factor']
         
-        if self.center and self._mean is not None:
-            x = x + self._mean
+        if stats['center']:
+            x = x + stats['mean']
             
         return x 
