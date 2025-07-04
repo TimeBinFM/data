@@ -135,7 +135,6 @@ class MeanScaler(BaseTransform):
         """
         super().__init__()
         self.epsilon = epsilon
-        self.center = center
         self.register_buffer('mean', None)
         self.register_buffer('scale_factor', None)
         
@@ -143,20 +142,16 @@ class MeanScaler(BaseTransform):
         """Scale each sample by its mean absolute value.
         
         Args:
-            x: Input data of shape (batch_size, sequence_length, n_channels)
+            x: Input data of shape (batch_size, sequence_length, n_channels) or (sequence_length, n_channels)
             
         Returns:
             Scaled data with same shape
         """
         # Compute mean of absolute values per sample
-        self.mean = x.mean(dim=1, keepdim=True) if self.center else None
-        abs_mean = torch.abs(x).mean(dim=1, keepdim=True)  # Shape: (batch_size, 1, n_channels)
+        abs_mean = torch.abs(x).mean(dim=-2, keepdim=True)  # Shape: (batch_size, 1, n_channels)
         
         # Add epsilon to handle zero-valued sequences
         self.scale_factor = abs_mean + self.epsilon
-        
-        if self.center:
-            return (x - self.mean) / self.scale_factor
         return x / self.scale_factor
     
     def inverse_transform(self, x: torch.Tensor) -> torch.Tensor:
@@ -171,8 +166,4 @@ class MeanScaler(BaseTransform):
         if self.scale_factor is None:
             raise RuntimeError("Scaler must be applied to data before inverse transform")
             
-        if self.center:
-            if self.mean is None:
-                raise RuntimeError("Scaler must be applied to data before inverse transform")
-            return x * self.scale_factor + self.mean
         return x * self.scale_factor 

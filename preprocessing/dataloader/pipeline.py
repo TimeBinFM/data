@@ -4,10 +4,9 @@ from typing import Optional, List, Union, Callable
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-from ..config import Config
-from ..transformation import BaseTransform, get_transform
-from ..augmentation.linear_combo import LinearCombination
-
+from preprocessing.config import Config
+from preprocessing.transformation import BaseTransform, get_transform
+from preprocessing.augmentation.linear_combo import LinearCombination
 
 class TimeSeriesPipeline:
     """Pipeline for loading and preprocessing time series data."""
@@ -40,6 +39,7 @@ class TimeSeriesPipeline:
         return transforms
         
     def _build_augmentations(self) -> List[Callable]:
+        #TODO: rewrite this
         """Build augmentation transforms based on config.
         
         Returns:
@@ -58,24 +58,6 @@ class TimeSeriesPipeline:
                 
         return augmentations
         
-    def fit_transforms(self, dataset: Dataset) -> None:
-        """Fit preprocessing transforms on the dataset.
-        
-        Args:
-            dataset: Input dataset
-        """
-        # Get all data at once for fitting
-        if isinstance(dataset[0], tuple):
-            x = torch.stack([x for x, _ in dataset])
-        else:
-            x = torch.stack([x for x in dataset])
-            
-        # Fit each transform sequentially
-        for transform in self.transforms:
-            if hasattr(transform, 'fit'):
-                transform.fit(x)
-                x = transform(x)
-                
     def create_dataloader(
         self,
         dataset: Dataset,
@@ -137,25 +119,33 @@ class TransformedDataset(Dataset):
         
         # Apply transforms
         if isinstance(item, tuple):
-            x, y = item
-            for transform in self.transforms:
-                x = transform(x)
-            
-            # Apply augmentations if any
-            if self.augmentations and torch.rand(1).item() < 0.5:  # 50% chance to augment
-                for aug in self.augmentations:
-                    x, y = aug(x.unsqueeze(0), y.unsqueeze(0))
-                    x, y = x.squeeze(0), y.squeeze(0)
-                    
-            return x, y
-        else:
-            x = item
-            for transform in self.transforms:
-                x = transform(x)
+            if len(item) == 2:
+                # Dataset with labels (x, y)
+                x, y = item
+                for transform in self.transforms:
+                    x = transform(x)
                 
-            # Apply augmentations if any
-            if self.augmentations and torch.rand(1).item() < 0.5:
-                for aug in self.augmentations:
-                    x = aug(x.unsqueeze(0)).squeeze(0)
-                    
-            return x 
+                # Apply augmentations if any
+                if self.augmentations and torch.rand(1).item() < 0.5:  # 50% chance to augment
+                    for aug in self.augmentations:
+                        x, y = aug(x.unsqueeze(0), y.unsqueeze(0))
+                        x, y = x.squeeze(0), y.squeeze(0)
+                        
+                return x, y
+            else:
+                # Dataset with single tensor in tuple
+                x = item[0]
+        else:
+            # Dataset returns tensor directly
+            x = item
+            
+        # Apply transforms to single tensor
+        for transform in self.transforms:
+            x = transform(x)
+            
+        # Apply augmentations if any
+        if self.augmentations and torch.rand(1).item() < 0.5:
+            for aug in self.augmentations:
+                x = aug(x.unsqueeze(0)).squeeze(0)
+                
+        return x 

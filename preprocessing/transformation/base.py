@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 
 
-class Transform(ABC, nn.Module):
+class BaseTransform(ABC, nn.Module):
     """Abstract base class for all per-sample transformations.
     
     All transforms must:
