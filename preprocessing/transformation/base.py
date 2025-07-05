@@ -24,7 +24,7 @@ class BaseTransform(ABC):
             
         Returns:
             tuple:
-                - Transformed tensor of same shape
+                - Transformed tensor
                 - Dictionary of parameters needed for inverse transform
         """
         pass
