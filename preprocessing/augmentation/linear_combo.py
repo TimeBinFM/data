@@ -2,10 +2,9 @@
 
 from typing import Optional
 import torch
-import torch.nn as nn
 
 
-class LinearCombination(nn.Module):
+class LinearCombination:
     """Linear combination augmentation for time series data.
     
     This transform creates new samples by taking linear combinations of existing time series:
