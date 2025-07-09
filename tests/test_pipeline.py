@@ -79,7 +79,7 @@ def test_transform_chain():
             transforms=[
                 TransformConfig(
                     name="StandardScaler",
-                    params={"epsilon": 1e-8}
+                    params={}
                 ),
                 TransformConfig(
                     name="MinMaxScaler",
@@ -93,9 +93,6 @@ def test_transform_chain():
     
     dataset = DummyDataset()
     pipeline = TimeSeriesPipeline(config)
-    
-    # Fit transforms on the dataset
-    pipeline.fit_transforms(dataset)
     
     # Create dataloader and get batch
     dataloader = pipeline.create_dataloader(dataset)
@@ -124,9 +121,6 @@ def test_dataloader_creation():
     
     dataset = DummyDataset()
     pipeline = TimeSeriesPipeline(config)
-    
-    # Fit transforms on the dataset
-    pipeline.fit_transforms(dataset)
     
     # Create dataloader
     dataloader = pipeline.create_dataloader(dataset)

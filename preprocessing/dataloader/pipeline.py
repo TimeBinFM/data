@@ -52,8 +52,7 @@ class TimeSeriesPipeline:
             "linear_combo" in self.config.augmentation.methods):
             augmentations.append(
                 LinearCombination(
-                    alpha=self.config.augmentation.linear_combo_ratio,
-                    beta=self.config.augmentation.linear_combo_ratio
+                    alpha=self.config.augmentation.linear_combo_ratio
                 )
             )
                 
