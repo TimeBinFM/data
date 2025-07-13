@@ -12,15 +12,15 @@ class DummyDataset(TensorIterableDataset):
 
 @pytest.mark.parametrize("batch_size, include_last_batch, expected_batches", [
     (3, True, [
-        torch.tensor([[0.], [1.], [2.]]),
-        torch.tensor([[3.], [4.], [5.]]),
-        torch.tensor([[6.]])
+        [torch.tensor([0.]), torch.tensor([1.]), torch.tensor([2.])],
+        [torch.tensor([3.]), torch.tensor([4.]), torch.tensor([5.])],
+        [torch.tensor([6.])]
     ]),
     (3, False, [
-        torch.tensor([[0.], [1.], [2.]]),
-        torch.tensor([[3.], [4.], [5.]])
+        [torch.tensor([0.]), torch.tensor([1.]), torch.tensor([2.])],
+        [torch.tensor([3.]), torch.tensor([4.]), torch.tensor([5.])],
     ]),
-    (1, True, [torch.tensor([[i]]) for i in range(7)]),
+    (1, True, [[torch.tensor([i])] for i in range(7)]),
 ])
 def test_batching_iterable_dataset(batch_size, include_last_batch, expected_batches):
     ds = DummyDataset()
@@ -29,5 +29,6 @@ def test_batching_iterable_dataset(batch_size, include_last_batch, expected_batc
     output_batches = list(batching_ds)
 
     assert len(output_batches) == len(expected_batches)
-    for out, exp in zip(output_batches, expected_batches):
-        assert torch.equal(out, exp), f"Expected {exp}, got {out}"
+    for output_batch, exp_batch in zip(output_batches, expected_batches):
+        for out, exp in zip(output_batch, exp_batch):
+            assert torch.equal(out, exp), f"Expected {exp}, got {out}"

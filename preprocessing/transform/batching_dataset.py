@@ -9,13 +9,13 @@ class BatchingIterableDataset(TensorIterableDataset):
         self.batch_size = batch_size
         self.include_last_batch = include_last_batch
 
-    def __iter__(self) -> Iterator[torch.Tensor]:
+    def __iter__(self) -> Iterator[List[torch.Tensor]]:
         buffer: List[torch.Tensor] = []
         for item in iter(self.dataset):
             buffer.append(item)
             if len(buffer) == self.batch_size:
-                yield torch.stack(buffer)
-                buffer.clear()
+                yield buffer
+                buffer = []
         
         if len(buffer) > 0 and self.include_last_batch:
-            yield torch.stack(buffer)
+            yield buffer

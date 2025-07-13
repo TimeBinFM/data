@@ -1,13 +1,12 @@
 import torch
-from .tensor_dataset import TensorIterableDataset
-from typing import Iterator
+from torch.utils.data import IterableDataset
+from typing import List, Iterator
 
-class UnbatchingIterableDataset(TensorIterableDataset):
-    def __init__(self, dataset: TensorIterableDataset, dim: int):
+class UnbatchingIterableDataset(IterableDataset[List[torch.Tensor]]):
+    def __init__(self, dataset: IterableDataset[List[torch.Tensor]]):
         self.dataset = dataset
-        self.dim = dim
 
     def __iter__(self) -> Iterator[torch.Tensor]:
         for batch in iter(self.dataset):
-            for item in torch.unbind(batch, self.dim):
+            for item in batch:
                 yield item
