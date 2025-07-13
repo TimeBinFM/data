@@ -15,4 +15,3 @@ class CombiningDataset(TensorIterableDataset):
         iterators = [iter(ds) for ds in self.datasets]
         for items in zip(*iterators):
             yield self.op(*items)
-    
