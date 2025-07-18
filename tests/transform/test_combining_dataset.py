@@ -1,7 +1,7 @@
 import torch
 import pytest
 
-from preprocessing.transform.tensor_dataset import TensorIterableDataset
+from preprocessing.common import TensorIterableDataset
 from preprocessing.transform.combining_dataset import CombiningDataset
 
 # Dummy datasets that emit single-item tensors

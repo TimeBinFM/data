@@ -1,7 +1,7 @@
 import torch
 import pytest
 
-from preprocessing.transform.tensor_dataset import TensorIterableDataset
+from preprocessing.common import TensorIterableDataset
 from preprocessing.transform.batching_dataset import BatchingIterableDataset
 
 # Dummy dataset that yields 7 scalar tensors: [0], [1], ..., [6]
