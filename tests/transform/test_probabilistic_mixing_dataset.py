@@ -4,7 +4,7 @@ from collections import Counter
 from typing import Dict
 
 from preprocessing.transform.probabilistic_mixing_dataset import ProbabilisticMixingDataset
-from preprocessing.transform.tensor_dataset import TensorIterableDataset
+from preprocessing.common import TensorIterableDataset
 
 class ConstantDataset(TensorIterableDataset):
     def __init__(self, value: float, count: int):

@@ -1,6 +1,6 @@
 import torch
 import os
-from preprocessing.transform.tensor_dataset import TensorIterableDataset
+from preprocessing.common import TensorIterableDataset
 
 def serialize_tensor_stream(
     dataset: TensorIterableDataset,

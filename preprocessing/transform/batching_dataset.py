@@ -1,5 +1,5 @@
 import torch
-from .tensor_dataset import TensorIterableDataset
+from preprocessing.common import TensorIterableDataset
 from typing import Iterator, List
 
 class BatchingIterableDataset(TensorIterableDataset):

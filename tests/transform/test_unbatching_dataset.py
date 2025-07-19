@@ -3,7 +3,7 @@ import pytest
 from typing import List
 from torch.utils.data import IterableDataset
 
-from preprocessing.transform.tensor_dataset import TensorIterableDataset
+from preprocessing.common import TensorIterableDataset
 from preprocessing.transform.unbatching_dataset import UnbatchingIterableDataset
 
 # Dummy dataset that yields two batches

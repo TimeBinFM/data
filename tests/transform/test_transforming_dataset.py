@@ -1,6 +1,6 @@
 import torch
 import pytest
-from preprocessing.transform.tensor_dataset import TensorIterableDataset
+from preprocessing.common import TensorIterableDataset
 from preprocessing.transform.transforming_dataset import TransformingDataset
 
 class DummyDataset(TensorIterableDataset):

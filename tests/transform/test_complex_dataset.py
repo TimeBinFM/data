@@ -2,7 +2,7 @@ import torch
 import pytest
 from typing import List
 
-from preprocessing.transform.tensor_dataset import TensorIterableDataset
+from preprocessing.common import TensorIterableDataset
 from preprocessing.transform.probabilistic_mixing_dataset import ProbabilisticMixingDataset
 from preprocessing.transform.dataset_builder import Builder
 

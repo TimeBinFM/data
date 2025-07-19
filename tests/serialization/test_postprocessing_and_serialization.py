@@ -5,7 +5,7 @@ from typing import List, Iterator
 
 from pathlib import Path
 
-from preprocessing.transform.tensor_dataset import TensorIterableDataset
+from preprocessing.common import TensorIterableDataset
 from preprocessing.transform.dataset_builder import Builder
 from preprocessing.serialization.serialize import serialize_tensor_stream
 from preprocessing.serialization.deserialize import SerializedTensorDataset
