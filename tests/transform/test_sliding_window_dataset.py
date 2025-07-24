@@ -1,53 +1,51 @@
 import torch
 from torch.utils.data import IterableDataset
+import pytest
+
+from preprocessing.common import TensorIterableDataset
 from preprocessing.transform.sliding_window_dataset import SlidingWindowIterableDataset
 
-
-class DummyTensorDataset(IterableDataset):
-    def __init__(self, n: int):
-        self.n = n
+# Dummy dataset that yields fixed tensors
+class DummyTensorDataset(TensorIterableDataset):
+    def __init__(self, tensors):
+        self.tensors = tensors
 
     def __iter__(self):
-        for i in range(self.n):
-            yield torch.tensor([i])
+        for tensor in self.tensors:
+            yield tensor
 
 
-def test_sliding_window_basic():
-    dataset = DummyTensorDataset(10)
-    windowed = SlidingWindowIterableDataset(dataset, window_size=3, step=2)
-    result = list(windowed)
-
-    expected = [
-        [torch.tensor([0]), torch.tensor([1]), torch.tensor([2])],
-        [torch.tensor([2]), torch.tensor([3]), torch.tensor([4])],
-        [torch.tensor([4]), torch.tensor([5]), torch.tensor([6])],
-        [torch.tensor([6]), torch.tensor([7]), torch.tensor([8])],
-    ]
+@pytest.mark.parametrize("tensors, window_size, step, expected", [
+    (
+        [torch.tensor([1, 2, 3, 4, 5])],
+        3,
+        1,
+        [torch.tensor([1, 2, 3]), torch.tensor([2, 3, 4]), torch.tensor([3, 4, 5])]
+    ),
+    (
+        [torch.tensor([1, 2, 3, 4, 5])],
+        2,
+        1,
+        [torch.tensor([1, 2]), torch.tensor([2, 3]), torch.tensor([3, 4]), torch.tensor([4, 5])]
+    ),
+    (
+        [torch.tensor([1, 2, 3])],
+        4,
+        1,
+        []  # window too large
+    ),
+    (
+        [torch.tensor([1, 2, 3, 4])],
+        2,
+        2,
+        [torch.tensor([1, 2]), torch.tensor([2, 3]), torch.tensor([3, 4])]
+    ),
+])
+def test_sliding_window_iterable_dataset(tensors, window_size, step, expected):
+    dataset = DummyTensorDataset(tensors)
+    sliding = SlidingWindowIterableDataset(dataset, window_size, step)
+    result = list(sliding)
 
     assert len(result) == len(expected)
-    for actual_window, expected_window in zip(result, expected):
-        for actual, expected_tensor in zip(actual_window, expected_window):
-            assert torch.equal(actual, expected_tensor)
-
-
-def test_sliding_window_exact_fit():
-    dataset = DummyTensorDataset(6)
-    windowed = SlidingWindowIterableDataset(dataset, window_size=3, step=3)
-    result = list(windowed)
-
-    expected = [
-        [torch.tensor([0]), torch.tensor([1]), torch.tensor([2])],
-        [torch.tensor([3]), torch.tensor([4]), torch.tensor([5])]
-    ]
-
-    assert len(result) == len(expected)
-    for actual_window, expected_window in zip(result, expected):
-        for actual, expected_tensor in zip(actual_window, expected_window):
-            assert torch.equal(actual, expected_tensor)
-
-
-def test_sliding_window_too_small():
-    dataset = DummyTensorDataset(2)
-    windowed = SlidingWindowIterableDataset(dataset, window_size=3, step=1)
-    result = list(windowed)
-    assert result == []
+    for res, exp in zip(result, expected):
+        assert torch.equal(res, exp)
