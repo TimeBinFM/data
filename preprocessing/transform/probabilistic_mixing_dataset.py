@@ -1,4 +1,4 @@
-from preprocessing.common import TensorIterableDataset
+from ..common import TensorIterableDataset
 from typing import List, Dict, Iterator, Optional
 from torch import Tensor
 import random

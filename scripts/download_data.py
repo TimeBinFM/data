@@ -5,8 +5,8 @@ from pathlib import Path
 import hydra
 from omegaconf import DictConfig
 
-from preprocessing.config import DatasetConfig
-from preprocessing.downloader.huggingface import HuggingFaceDownloader
+from ..preprocessing.config import DatasetConfig
+from ..preprocessing.downloader.huggingface import HuggingFaceDownloader
 
 app = typer.Typer()
 

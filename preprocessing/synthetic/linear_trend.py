@@ -2,7 +2,7 @@
 
 import torch
 from typing import Iterator, Optional
-from preprocessing.common import TensorIterableDataset
+from ..common import TensorIterableDataset
 
 
 class LinearTrendDataset(TensorIterableDataset):

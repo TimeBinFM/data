@@ -2,7 +2,7 @@ from torch import Tensor
 from typing import Callable
 from torch.utils.data import IterableDataset
 
-from preprocessing.common import TensorIterableDataset
+from ..common import TensorIterableDataset
 from .transforming_dataset import TransformingDataset
 from .batching_dataset import BatchingIterableDataset
 from .unbatching_dataset import UnbatchingIterableDataset
