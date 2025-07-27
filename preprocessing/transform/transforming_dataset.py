@@ -1,5 +1,5 @@
 import torch
-from preprocessing.common import TensorIterableDataset
+from ..common import TensorIterableDataset
 from typing import Callable, Iterator
 
 class TransformingDataset(TensorIterableDataset):
