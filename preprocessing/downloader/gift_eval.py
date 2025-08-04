@@ -35,23 +35,22 @@ class GiftEvalWrapperDataset(IterableDataset):
 
         return torch.nan_to_num(result, nan=0)
 
-def load_gifteval_dataset(dataset_names: List) -> Union[
+def load_dataset(dataset_name: str, data_files: List = None) -> Union[
     datasets.DatasetDict, 
     datasets.Dataset, 
     datasets.IterableDatasetDict, datasets.IterableDataset
 ]:
     return datasets.load_dataset(
-        "Salesforce/GiftEvalPretrain",
+        dataset_name,
         split="train",
         streaming=True,
-        data_files=[
-            f'{name}/*.arrow' for name in dataset_names
-        ]
+        data_files=data_files
     )
 
-def load_gifteval_dataset_wrapper(dataset_names: List) -> GiftEvalWrapperDataset:
+def load_gifteval_dataset_wrapper(dataset_name: str, data_files: List) -> GiftEvalWrapperDataset:
     return GiftEvalWrapperDataset(
-        load_gifteval_dataset(
-            dataset_names
+        load_dataset(
+            dataset_name,
+            data_files
         ) # type: ignore
     )
