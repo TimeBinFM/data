@@ -1,12 +1,13 @@
-from ..common import TensorIterableDataset
-from typing import List, Dict, Iterator, Optional
-from torch import Tensor
+from torch.utils.data import IterableDataset
+from typing import List, Dict, Iterator, Optional, TypeVar
 import random
 
-class ProbabilisticMixingDataset(TensorIterableDataset):
+T = TypeVar('T')
+
+class ProbabilisticMixingDataset(IterableDataset[T]):
     def __init__(
         self,
-        datasets: Dict[str, TensorIterableDataset],
+        datasets: Dict[str, IterableDataset[T]],
         probabilities: Optional[Dict[str, float]] = None,
         seed: Optional[int] = None,
     ):
@@ -24,8 +25,8 @@ class ProbabilisticMixingDataset(TensorIterableDataset):
             assert abs(total - 1.0) < 1e-6, f"Probabilities must sum to 1. Got {total}"
             self.prob_dict = probabilities
 
-    def __iter__(self) -> Iterator[Tensor]:
-        iterators: Dict[str, Iterator[Tensor]] = {
+    def __iter__(self) -> Iterator[T]:
+        iterators: Dict[str, Iterator[T]] = {
             k: iter(ds) for k, ds in self.dataset_dict.items()
         }
         active_keys: List[str] = list(iterators.keys())
