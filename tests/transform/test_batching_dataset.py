@@ -20,7 +20,7 @@ class DummyDataset(TensorIterableDataset):
         [torch.tensor([0.]), torch.tensor([1.]), torch.tensor([2.])],
         [torch.tensor([3.]), torch.tensor([4.]), torch.tensor([5.])],
     ]),
-    (1, True, [[torch.tensor([i])] for i in range(7)]),
+    (1, True, [[torch.tensor([i], dtype=torch.float32)] for i in range(7)]),
 ])
 def test_batching_iterable_dataset(batch_size, include_last_batch, expected_batches):
     ds = DummyDataset()
