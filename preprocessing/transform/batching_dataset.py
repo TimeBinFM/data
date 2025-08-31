@@ -1,16 +1,17 @@
-import torch
-from ..common import TensorIterableDataset
-from typing import Iterator, List
+from torch.utils.data import IterableDataset
+from typing import Iterator, List, TypeVar
 
-class BatchingIterableDataset(TensorIterableDataset):
-    def __init__(self, dataset: TensorIterableDataset, batch_size: int, 
+T = TypeVar('T')
+
+class BatchingIterableDataset(IterableDataset[List[T]]):
+    def __init__(self, dataset: IterableDataset[T], batch_size: int, 
                  include_last_batch: bool = True):
         self.dataset = dataset
         self.batch_size = batch_size
         self.include_last_batch = include_last_batch
 
-    def __iter__(self) -> Iterator[List[torch.Tensor]]:
-        buffer: List[torch.Tensor] = []
+    def __iter__(self) -> Iterator[List[T]]:
+        buffer: List[T] = []
         for item in iter(self.dataset):
             buffer.append(item)
             if len(buffer) == self.batch_size:
