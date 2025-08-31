@@ -22,10 +22,13 @@ class Builder:
         return Builder(BatchingIterableDataset(self.dataset, batch_size, include_last_batch))
     
     def sliding_window(self, window_size: int, step: int = 1) -> "Builder":
+        if not isinstance(self.dataset, TensorIterableDataset):
+            raise ValueError("Dataset must be a TensorIterableDataset")
+
         return Builder(SlidingWindowIterableDataset(self.dataset, window_size, step))
 
     def flat(self) -> "Builder":
         return Builder(UnbatchingIterableDataset(self.dataset))
 
-    def build(self) -> TensorIterableDataset:
+    def build(self) -> IterableDataset:
         return self.dataset
