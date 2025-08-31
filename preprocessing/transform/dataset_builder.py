@@ -1,5 +1,5 @@
 from torch import Tensor
-from typing import Callable
+from typing import Callable, TypeVar
 from torch.utils.data import IterableDataset
 
 from ..common import TensorIterableDataset
@@ -8,11 +8,15 @@ from .batching_dataset import BatchingIterableDataset
 from .unbatching_dataset import UnbatchingIterableDataset
 from .sliding_window_dataset import SlidingWindowIterableDataset
 
+T_in = TypeVar('T_in')
+T_out = TypeVar('T_out')
+
+
 class Builder:
     def __init__(self, dataset: IterableDataset):
         self.dataset = dataset
 
-    def map(self, op: Callable[[Tensor], Tensor]) -> "Builder":
+    def map(self, op: Callable[[T_in], T_out]) -> "Builder":
         return Builder(TransformingDataset(self.dataset, op=op))
 
     def batch(self, batch_size: int, include_last_batch: bool = True) -> "Builder":
