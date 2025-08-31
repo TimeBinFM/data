@@ -1,4 +1,4 @@
-from typing import Callable, TypeVar
+from typing import Callable, TypeVar, Generic
 from torch.utils.data import IterableDataset
 
 from ..common import TensorIterableDataset
@@ -11,8 +11,8 @@ T_in = TypeVar('T_in')
 T_out = TypeVar('T_out')
 
 
-class Builder:
-    def __init__(self, dataset: IterableDataset):
+class Builder(Generic[T_in]):
+    def __init__(self, dataset: IterableDataset[T_in]):
         self.dataset = dataset
 
     def map(self, op: Callable[[T_in], T_out]) -> "Builder":
@@ -28,7 +28,7 @@ class Builder:
         return Builder(SlidingWindowIterableDataset(self.dataset, window_size, step))
 
     def flat(self) -> "Builder":
-        return Builder(UnbatchingIterableDataset(self.dataset))
+        return Builder(UnbatchingIterableDataset(self.dataset))  # pyright: ignore[reportArgumentType]
 
     def build(self) -> IterableDataset:
         return self.dataset
