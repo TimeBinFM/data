@@ -4,7 +4,11 @@ version = "0.1.0"
 description = "A preprocessing library for foundation time series models"
 authors = ["Your Name <your.email@example.com>"]
 readme = "README.md"
-packages = [{include = "preprocessing"}]
+packages = [{ include = "preprocessing" }]
+license = "MIT"
+homepage = "https://github.com/TimeBinFM/data"
+repository = "https://github.com/TimeBinFM/data"
+keywords = ["time-series", "preprocessing", "ml"]
 
 [tool.poetry.dependencies]
 python = "^3.11"
