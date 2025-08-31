@@ -1,4 +1,3 @@
-import torch
 from torch.utils.data import IterableDataset
 from typing import Callable, Iterator, Iterable, TypeVar    
 

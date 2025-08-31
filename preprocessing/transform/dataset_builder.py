@@ -1,4 +1,3 @@
-from torch import Tensor
 from typing import Callable, TypeVar
 from torch.utils.data import IterableDataset
 
