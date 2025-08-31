@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ts-preprocessing"
-version = "0.1.1"
+version = "0.1.2"
 description = "A preprocessing library for foundation time series models"
 authors = ["Your Name <your.email@example.com>"]
 readme = "README.md"
