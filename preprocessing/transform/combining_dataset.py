@@ -1,17 +1,20 @@
 import torch
-from ..common import TensorIterableDataset
-from typing import Callable, Iterator, Iterable
+from torch.utils.data import IterableDataset
+from typing import Callable, Iterator, Iterable, TypeVar    
 
-class CombiningDataset(TensorIterableDataset):
+T_in = TypeVar('T_in')
+T_out = TypeVar('T_out')
+
+class CombiningDataset(IterableDataset[T_in]):
     def __init__(
         self,
-        datasets: Iterable[TensorIterableDataset],
-        op: Callable[..., torch.Tensor],
+        datasets: Iterable[IterableDataset[T_in]],
+        op: Callable[..., T_out],
     ):
         self.datasets = list(datasets)
         self.op = op
 
-    def __iter__(self) -> Iterator[torch.Tensor]:
+    def __iter__(self) -> Iterator[T_out]:
         iterators = [iter(ds) for ds in self.datasets]
         for items in zip(*iterators):
             yield self.op(*items)
