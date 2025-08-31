@@ -30,5 +30,5 @@ class Builder(Generic[T_in]):
     def flat(self) -> "Builder":
         return Builder(UnbatchingIterableDataset(self.dataset))  # pyright: ignore[reportArgumentType]
 
-    def build(self) -> IterableDataset:
+    def build(self) -> IterableDataset[T_in]:
         return self.dataset
